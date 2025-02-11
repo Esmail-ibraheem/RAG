@@ -388,7 +388,7 @@ def runAgenticRAG():
         # RAG Configuration
         st.sidebar.header("RAG Configuration")
         api_key = st.sidebar.text_input("OpenAI API Key", type="password")
-        model_options = ['gpt-4-turbo', 'gpt-4o-mini', 'gpt-3.5-turbo']
+        model_options = ['gpt-4o-mini']
         selected_model = st.sidebar.selectbox("Select GPT Model", model_options)
 
         if api_key:
