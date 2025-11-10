@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Agentic RAG System</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Agentic RAG System 💬</h1>
+      <p>AI Retrieval-Augmented Chat + BM25 Search</p>
+    </header>
+
+    <section class="config-card">
+      <h2>Configuration</h2>
+      <input id="api-key-input" type="password" placeholder="OpenAI API Key" />
+      <select id="model-select">
+        <option value="gpt-4o-mini">gpt-4o-mini</option>
+      </select>
+      <button id="save-config-btn">Save Config</button>
+      <span id="config-status"></span>
+    </section>
+
+    <section class="chat-layout">
+      <aside class="sidebar">
+        <h3>Chats</h3>
+        <button id="new-chat-btn">+ New Chat</button>
+        <ul id="chat-list"></ul>
+
+        <h3>RAG Files</h3>
+        <input id="rag-files" type="file" multiple />
+        <button id="upload-rag-btn">Upload & Index</button>
+        <div id="rag-files-info"></div>
+
+        <h3>BM25 Files</h3>
+        <input id="bm25-files" type="file" multiple />
+        <button id="upload-bm25-btn">Upload & Index</button>
+      </aside>
+
+      <main class="main-panel">
+        <div class="tabs">
+          <button class="tab-button active" data-tab="rag">RAG Chat</button>
+          <button class="tab-button" data-tab="bm25">BM25 Search</button>
+        </div>
+
+        <div id="tab-rag" class="tab active">
+          <div id="messages"></div>
+          <form id="chat-form">
+            <input id="chat-input" type="text" placeholder="Ask something about your documents..." />
+            <button type="submit">Send</button>
+          </form>
+        </div>
+
+        <div id="tab-bm25" class="tab">
+          <div class="bm25-search">
+            <input id="bm25-input" type="text" placeholder="BM25 search query..." />
+            <button id="bm25-search-btn">Search</button>
+          </div>
+          <div id="bm25-results"></div>
+        </div>
+      </main>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
