@@ -2,10 +2,12 @@
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import List, Optional
 from pathlib import Path
 import os
+import json
 
 from .rag_core import (
     set_openai_config,
@@ -16,6 +18,9 @@ from .rag_core import (
     get_chat_messages,
     run_rag_chat,
     bm25_search,
+    RAGAgent,
+    append_chat_exchange,
+    Chat,
 )
 
 app = FastAPI()
@@ -74,6 +79,14 @@ def configure(req: ConfigRequest):
 
 @app.post("/rag/upload")
 async def upload_rag(files: List[UploadFile] = File(...)):
+    # Check if OpenAI is configured
+    import openai as oai
+    if not oai.api_key:
+        raise HTTPException(
+            status_code=400, 
+            detail="OpenAI API key not configured. Please configure it first in the settings."
+        )
+    
     paths = []
     for file in files:
         dest = UPLOADS_RAG_DIR / file.filename
@@ -85,7 +98,11 @@ async def upload_rag(files: List[UploadFile] = File(...)):
     if not paths:
         raise HTTPException(status_code=400, detail="No files uploaded")
 
-    index_rag_paths(paths)
+    try:
+        index_rag_paths(paths)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to index documents: {str(e)}")
+    
     return {"indexed": len(paths), "file_names": [p.name for p in paths]}
 
 
@@ -125,11 +142,51 @@ def api_get_chat_messages(chat_id: int):
     return [ChatMessage(**m) for m in msgs]
 
 
+@app.delete("/chats/{chat_id}")
+def api_delete_chat(chat_id: int):
+    """Delete a chat and all its messages"""
+    from .rag_core import SessionLocal
+    db = SessionLocal()
+    try:
+        chat = db.query(Chat).filter_by(id=chat_id).first()
+        if not chat:
+            raise HTTPException(status_code=404, detail="Chat not found")
+        db.delete(chat)
+        db.commit()
+        return {"status": "deleted", "chat_id": chat_id}
+    finally:
+        db.close()
+
+
 @app.post("/rag/ask", response_model=AskResponse)
 def api_rag_ask(req: AskRequest):
-    # req.file_names should be a list of filenames that exist in uploads_rag
+    """Non-streaming version for compatibility"""
     answer = run_rag_chat(req.chat_id, req.query, req.file_names)
     return AskResponse(answer=answer)
+
+
+@app.post("/rag/ask-stream")
+async def api_rag_ask_stream(req: AskRequest):
+    """Streaming version for real-time responses"""
+    async def generate():
+        agent = RAGAgent()
+        full_response = ""
+        
+        try:
+            for chunk in agent.invoke_agent(req.query, req.file_names or []):
+                if isinstance(chunk, dict) and "replies" in chunk and chunk["replies"]:
+                    content = chunk["replies"][0]["content"]
+                    if content:
+                        full_response += content
+                        yield f"data: {json.dumps({'content': content})}\n\n"
+            
+            # Save to database after streaming is complete
+            append_chat_exchange(req.chat_id, req.query, full_response)
+            yield f"data: {json.dumps({'done': True})}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+    
+    return StreamingResponse(generate(), media_type="text/event-stream")
 
 
 @app.post("/bm25/search")

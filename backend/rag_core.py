@@ -14,7 +14,7 @@ from haystack.components.retrievers.in_memory import (
     InMemoryBM25Retriever,
 )
 
-from utils.custom_converters import DocxToTextConverter, ExcelToTextConverter
+from .utils.custom_converters import DocxToTextConverter, ExcelToTextConverter
 
 from sqlalchemy import (
     create_engine,
