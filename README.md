@@ -4,6 +4,9 @@ A modern, full-stack Retrieval-Augmented Generation (RAG) system with a beautifu
 
 ![RAG System](https://img.shields.io/badge/RAG-System-blue) ![React](https://img.shields.io/badge/React-18.2-61dafb) ![FastAPI](https://img.shields.io/badge/FastAPI-0.104-009688) ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.3-38bdf8)
 
+<img width="3834" height="1768" alt="image" src="https://github.com/user-attachments/assets/0de5e627-a982-4173-afcd-13801cb150a3" />
+
+
 ## ✨ Features
 
 - **🎨 Modern UI**: Beautiful React frontend with TailwindCSS and custom components
